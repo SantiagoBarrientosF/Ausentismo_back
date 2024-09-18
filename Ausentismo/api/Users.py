@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated 
 from Ausentismo.api.serializer import *
+from django.shortcuts import get_object_or_404
 
 class Usersdata(APIView):
 #    authentication_classes = [TokenAuthentication]
@@ -32,11 +33,20 @@ class Usersdata(APIView):
                Password = Password,
             )
           data.save()
-          ultimo_concepto = Usuario.objects.last()
-          serializer_concepto = UsuarioSerializer(ultimo_concepto)
-          return JsonResponse({'data': serializer_concepto.data, 'message': 'Datos agregados correctamente'})
+          ultimo_usuario = Usuario.objects.last()
+          serializer_usuario = UsuarioSerializer(ultimo_usuario)
+          return JsonResponse({'data': serializer_usuario.data, 'message': 'Datos agregados correctamente'})
 
-
+class update_conceptos(APIView):
+      def put(self,request,id):
+         users = get_object_or_404(Usuario,id=id) 
+         users.Nombre = request.data.get('nombre')
+         users.Apellido = request.data.get('apellido')
+         users.Username = request.data.get('username')
+         users.Rol = request.data.get('rol')
+         users.Sede = request.data.get('sede')
+         users.save()
+         return JsonResponse({'data': 'Success', 'message': 'Datos actualizados correctamente'}) 
 
 
 

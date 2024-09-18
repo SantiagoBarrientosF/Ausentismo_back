@@ -8,11 +8,30 @@ from django.utils import timezone
 #    Rol = models.CharField(max_length=100)
 #    Sede = models.CharField(max_length=100)
 #    Cargo = models.CharField(max_length=100)
-    
+
+class Usuario(models.Model):
+    Nombre = models.CharField(max_length=100)
+    Apellido = models.CharField(max_length=100,default=" ")
+    Rol = models.CharField(max_length=100)
+    Sede = models.CharField(max_length=100)
+    Cargo = models.CharField(max_length=100)
+    Username = models.CharField(max_length=100)
+    Password  = models.CharField(max_length=100)       
      
 class Vacaciones(models.Model):    
+    cedula = models.CharField(max_length=30)
+    nombre = models.CharField (max_length=100)   
+    correo = models.CharField (max_length=100)   
+    fecha_ingreso_empresa = models.DateTimeField(timezone.now())
+    dias_vacaciones = models.CharField(max_length= 5)
+    campaña = models.CharField(max_length=100)
+    cargo = models.CharField(max_length=100)
     fecha_inicio = models.DateTimeField(timezone.now())
     fecha_fin = models.DateTimeField(timezone.now())
+    fecha_incorporacion = models.DateTimeField(timezone.now())
+    observaciones = models.CharField(max_length=80)
+    jefe = models.CharField(max_length=80)
+   
     
   
 class Tiquetera(models.Model):    

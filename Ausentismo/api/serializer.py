@@ -9,7 +9,23 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name']
  
-# class UsuarioSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Usuario
-#         fields = ['id','Nombre', 'Username','Apellido']
+class UsuarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = ['id','Nombre', 'Username','Apellido']
+
+class Tiqueteraserializar(serializers.ModelSerializer):
+    class Meta:
+        model = Tiquetera
+        fields = ['__all__']
+
+class Vacacioneserializar(serializers.ModelSerializer):
+    class Meta:
+        model = Vacaciones
+        fields = ['__all__']
+        
+class Permisoserializar(serializers.ModelSerializer):
+    class Meta:
+        model = Permisos
+        fields = ['__all__']                
+                    
