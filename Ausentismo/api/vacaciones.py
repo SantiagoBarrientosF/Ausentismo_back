@@ -5,7 +5,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated 
 from Ausentismo.api.serializer import *
 
-class Usersdata(APIView):
+class vacacionessdata(APIView):
 #    authentication_classes = [TokenAuthentication]
 #    permission_classes = [IsAuthenticated]
    def get(self,request):    

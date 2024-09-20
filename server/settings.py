@@ -40,12 +40,12 @@ INSTALLED_APPS = [
     'Ausentismo',
     'corsheaders',
     'rest_framework',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://localhost:5173",
+    "http://localhost:8001",
 ]
 
 MIDDLEWARE = [

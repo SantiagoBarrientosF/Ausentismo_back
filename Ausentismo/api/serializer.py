@@ -17,15 +17,16 @@ class UsuarioSerializer(serializers.ModelSerializer):
 class Tiqueteraserializar(serializers.ModelSerializer):
     class Meta:
         model = Tiquetera
-        fields = ['__all__']
+        fields = '__all__'
 
 class Vacacioneserializar(serializers.ModelSerializer):
     class Meta:
         model = Vacaciones
-        fields = ['__all__']
+        fields = '__all__'
         
 class Permisoserializar(serializers.ModelSerializer):
+    # fecha_peticion = serializers.DateField(format="%Y-%m-%d")
     class Meta:
         model = Permisos
-        fields = ['__all__']                
+        fields = '__all__'                
                     
