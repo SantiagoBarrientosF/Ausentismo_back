@@ -11,8 +11,7 @@ class Usuario(models.Model):
     Sede = models.CharField(max_length=100)
     Cargo = models.CharField(max_length=100)
     Username = models.CharField(max_length=100)
-    Password  = models.CharField(max_length=100)       
-     
+    Password  = models.CharField(max_length=100)        
 class Vacaciones(models.Model):  
     Codigo_vacacione = models.CharField(unique=True,blank=True)  
     cedula = models.CharField(max_length=30)
@@ -27,17 +26,15 @@ class Vacaciones(models.Model):
     fecha_incorporacion = models.DateField(timezone.now())
     observaciones = models.CharField(max_length=80)
     jefe = models.CharField(max_length=80)
-   
-    
-  
 class Tiquetera(models.Model):    
-    motivo = models.CharField(max_length=200)
-    fecha_inicio = models.DateField(timezone.now())
-    fecha_fin = models.DateField(timezone.now())
-    tipo_tiquetera = models.CharField(max_length=100)
-    sede  = models.CharField(max_length=100)
-    estado = models.CharField(max_length=80)
-    
+    cedula = models.CharField()
+    nombre = models.CharField()
+    campaña = models.CharField()    
+    jefe = models.CharField()
+    fecha_peticion = models.DateField()
+    estado = models.CharField()
+    beneficios = models.CharField()
+    tipo_tiquetera = models.CharField()
 class Permisos(models.Model):
     codigo_permiso = models.CharField(unique=True,blank=True)
     cedula = models.CharField(max_length=30)
@@ -52,7 +49,6 @@ class Permisos(models.Model):
     jefe = models.CharField(max_length=80)
     tipo_permiso = models.CharField(max_length=80)
     parentesco = models.CharField(max_length=100,null=True)
-    
 class Historial(models.Model):
     id_vacaciones = models.ForeignKey(Vacaciones,on_delete=models.CASCADE,null = True)
     id_permisos = models.ForeignKey(Permisos,on_delete=models.CASCADE,null = True)
