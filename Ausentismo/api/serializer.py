@@ -1,19 +1,13 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from Ausentismo.models import *
-# from Ausentismo.models import Agentes, Conexion,Licencias,Factura
 
 # The `UserSerializer` class defines a serializer for the User model with specified fields.
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name','is_staff']
  
-class UsuarioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Usuario
-        fields = ['id','Nombre', 'Username','Apellido']
-
 class Tiqueteraserializar(serializers.ModelSerializer):
     class Meta:
         model = Tiquetera
@@ -25,8 +19,11 @@ class Vacacioneserializar(serializers.ModelSerializer):
         fields = '__all__'
         
 class Permisoserializar(serializers.ModelSerializer):
-    # fecha_peticion = serializers.DateField(format="%Y-%m-%d")
     class Meta:
         model = Permisos
         fields = '__all__'                
-                    
+
+class Historialserializar(serializers.ModelSerializer):
+    class Meta:
+        model = Historial_permisos
+        fields = '__all__'                              

@@ -12,12 +12,10 @@ from Ausentismo.api.signals import *
 @api_view(['POST']) 
 def login(request):
     user = get_object_or_404(User, username=request.data['username'])
-    
     if not user.check_password(request.data['password']):
         return Response({"error": "Credenciales incorrectas"}, status=status.HTTP_400_BAD_REQUEST)  
     token, created = Token.objects.get_or_create(user = user)   
     serializer = UserSerializer(instance=user)
-    
     return Response({'token': token.key ,'user': serializer.data},status=status.HTTP_201_CREATED)
 
 @csrf_exempt
@@ -39,11 +37,9 @@ def register(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         Usuario = serializer.save()   
-        
         Usuario = User.objects.get(username=serializer.data['username'])
         Usuario.set_password(request.data['password'])
         Usuario.save()
-        
         token = Token.objects.create(user = Usuario)
         return Response({'token': token.key,'user': serializer.data},status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)

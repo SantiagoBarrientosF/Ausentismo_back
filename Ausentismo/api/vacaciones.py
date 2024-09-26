@@ -4,49 +4,55 @@ from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated 
 from Ausentismo.api.serializer import *
-
+from Ausentismo.api.permisos import get_data_api
 class vacacionessdata(APIView):
 #    authentication_classes = [TokenAuthentication]
 #    permission_classes = [IsAuthenticated]
    def get(self,request):    
-      Valor= Permisos.objects.all() 
+      Valor= Vacaciones.objects.all() 
       Valores_list = list(Valor.values())
       return JsonResponse(Valores_list, safe=False) 
   
    def post(self,request):
+      # Users = User.objects.filter(is_superadmin = True)
+      
       if request.method == 'POST':
-          cedula = request.data.get("cedula")
-          nombre = request.data.get("nombre")
-          correo = request.data.get("correo")    
-          fecha_ingreso_empresa = request.data.get("fecha_ingreso")
-          dias_vacaciones = request.data.get("dias_vacaciones")
-          campaña = request.data.get("campania")
-          cargo = request.data.get("cargo")
-          fecha_inicio =request.data.get("fecha_inicio")
-          fecha_fin = request.data.get("fecha_fin")
-          fecha_incorporacion = request.data.get("fecha_incorporacion")
-          observaciones = request.data.get("observaciones")
-          jefe = request.data.get("jefe")
-          print(request.data)
-      if cedula and nombre and correo and fecha_ingreso_empresa and dias_vacaciones and campaña and cargo and fecha_inicio and fecha_fin and fecha_incorporacion and observaciones and jefe :
-          data  = Permisos(
-             cedula = cedula,
-             nombre = nombre,
-             correo = correo,
-             fecha_ingreso_empresa = fecha_ingreso_empresa,
-             dias_vacaciones = dias_vacaciones,
-             campaña = campaña,
-             cargo = cargo,
-             fecha_inicio = fecha_inicio, 
-             fecha_fin = fecha_fin,
-             fecha_incorporacion = fecha_incorporacion,
-             observaciones = observaciones,
-             jefe = jefe
-            )
-          data.save()
-          ultimas_vacaciones = Vacaciones.objects.last()
-          serializer_vacaciones = Vacacioneserializar(ultimas_vacaciones)
-          return JsonResponse({'data': serializer_vacaciones.data, 'message': 'Datos agregados correctamente'})
+         cedula = request.data.get("cedula")
+         Codigo_vacacione = request.data.get("codigo")
+         datos_api = get_data_api(cedula)
+         if not datos_api:
+            return JsonResponse({"message":"No se encontro el usuario"})
+         nombre = datos_api.get('Nombre')
+         correo = request.data.get('correo')
+         fecha_ingreso_empresa = datos_api.get('Fecha_ingreso')
+         campaña = datos_api.get('Campaña')
+         cargo = datos_api.get('Cargo')
+         fecha_inicio = request.data.get("fecha_inicio")
+         fecha_fin = request.data.get('fecha_fin')
+         fecha_incorporacion = request.data.get('fecha_incorporacion')
+         observaciones = request.data.get('observaciones')
+         jefe = request.data.get('jefe')
+         
+         print(request.data)
+      if nombre and correo and fecha_ingreso_empresa  and campaña and cargo and fecha_inicio and fecha_fin and fecha_incorporacion and observaciones and jefe:
+         data  = Vacaciones(
+               cedula = cedula,
+               Codigo_vacacione = Codigo_vacacione,
+               nombre = nombre,
+               correo = correo,
+               fecha_ingreso_empresa = fecha_ingreso_empresa,
+               campaña = campaña,
+               cargo = cargo,
+               fecha_inicio = fecha_inicio,
+               fecha_fin = fecha_fin,
+               fecha_incorporacion = fecha_incorporacion,
+               observaciones = observaciones,
+               jefe = jefe,
+         )
+         data.save()
+         ultimo_usuario = Vacaciones.objects.last()
+         serializer_usuario = Vacacioneserializar(ultimo_usuario)
+         return JsonResponse({'data': serializer_usuario.data, 'message': 'Datos agregados correctamente'})
 
 
 

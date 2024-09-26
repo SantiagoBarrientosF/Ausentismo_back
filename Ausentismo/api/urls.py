@@ -4,14 +4,17 @@ from . import login
 from Ausentismo.api.Users import *
 from django.contrib.auth import logout
 from  Ausentismo.api.permisos import Permisosdata
-from Ausentismo.api.backend import get_datos_api
+# from Ausentismo.api.backend import get_datos_api
 from Ausentismo.api.tiquetera import *
+from Ausentismo.api.vacaciones import *
 
 urlpatterns = [
     path('login/', login.login ),
     path("logout/", login.logout),
     path('register/', login.register ),
-    path('permisos/', Permisosdata.as_view()),
-    path('tiquetera/',Tiqueteradata.as_view()),
-    path("conexion/<str:cedula>" , get_datos_api),
+    path('Permisos/', Permisosdata.as_view()),
+    path('Tiquetera/',Tiqueteradata.as_view()),
+    path('Boss/',Usersdata.as_view()),
+    path('Vacaciones/',vacacionessdata.as_view()),
+    # path("conexion/<str:cedula>" , get_datos_api),
 ] 
