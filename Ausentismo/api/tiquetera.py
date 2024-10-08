@@ -6,6 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from Ausentismo.api.serializer import *
 from datetime import date
 from Ausentismo.api.permisos import get_data_api
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
 
 class Tiqueteradata(APIView):
     #    authentication_classes = [TokenAuthentication]
@@ -19,55 +21,78 @@ class Tiqueteradata(APIView):
         Valores_list = list(Valor.values())
         # Se retorna la lista en formato JSON sin necesidad de serialización (safe=False permite retornar listas)
         return JsonResponse(Valores_list, safe=False) 
-  
+    
     # Método POST para agregar un nuevo registro a la tabla Tiquetera
     def post(self, request):
-        # Verificar que el método sea POST
-        if request.method == 'POST':
-            # Se obtiene el valor de 'cedula' del cuerpo de la solicitud
-            cedula = request.data.get("cedula")
-            # Se hace una llamada a una función externa (get_data_api) para obtener datos adicionales de una API
+    # Verificar que el método sea POST
+     if request.method == 'POST': 
+        cedula = request.data.get("cedula")
+        try:
             datos_api = get_data_api(cedula)
-            # Si no se encuentran datos en la API, se retorna un mensaje de error
             if not datos_api:
-                return JsonResponse({"message": "No se encontró el usuario"})
-            
-            # Se extraen datos específicos de la respuesta de la API
+                return JsonResponse({"message":"No se pudo encontrar el usuario"}, status=404)
+
             nombre = datos_api.get('Nombre')
+            correo = request.data.get('correo')
             campaña = datos_api.get('Campaña')
-            # Se obtiene la fecha actual para la solicitud
-            fecha_peticion = date.today()
-            # Se extraen otros valores del cuerpo de la solicitud
+            # fecha_peticion = date.today()
+            tipo = request.data.get('tipo')
             estado = request.data.get('estado')
-            beneficios = request.data.get('beneficios')
-            jefe = request.data.get('jefe')
-            sede = request.data.get('sede')
-            tipo_tiquetera = request.data.get('tipo_tiquetera')
-
-            # Para depuración, se imprime el contenido del cuerpo de la solicitud
-            print(request.data)
-
-        # Verificar que todos los campos requeridos estén presentes
-        if nombre and estado and beneficios and campaña and fecha_peticion and sede and tipo_tiquetera and jefe:
-            # Crear una nueva instancia del modelo Tiquetera con los datos obtenidos
+            beneficios = request.data.get('beneficio')
+            User_id = request.data.get('jefe')
+            jefe = User.objects.get(id=User_id)
             data = Tiquetera(
-                cedula=cedula,
-                nombre=nombre,
-                campaña=campaña,
-                fecha_peticion=fecha_peticion,
-                estado=estado,
-                beneficios=beneficios,
-                sede=sede,
-                jefe=jefe,
-                tipo_tiquetera=tipo_tiquetera
-            )
-            # Guardar el nuevo registro en la base de datos
+                    cedula = cedula,
+                    nombre = nombre,
+                    correo = correo,
+                    # fecha_peticion = fecha_peticion,
+                    campaña = campaña,
+                    tipo = tipo,
+                    estado = estado,
+                    beneficios = beneficios,
+                    User_id = jefe
+                )
             data.save()
-
-            # Obtener el último registro guardado en la tabla Tiquetera
+            
+            # Serialize the last added record
             ultimo_usuario = Tiquetera.objects.last()
-            # Serializar ese objeto usando el serializador correspondiente (Tiqueteraserializar)
             serializer_usuario = Tiqueteraserializar(ultimo_usuario)
+            return JsonResponse({'data': serializer_usuario.data, 'message': 'Datos agregados correctamente', "status": 200})
 
-            # Retornar la información del último registro en formato JSON con un mensaje de éxito
-            return JsonResponse({'data': serializer_usuario.data, 'message': 'Datos agregados correctamente'})
+        except Exception as e:
+            print(f"Error: {e}")
+            return JsonResponse({"message": f"Error processing request: {str(e)}"}, status=500)
+
+ 
+
+class beneficios(APIView):
+    def get(self, request):    
+        # Se obtienen todos los objetos del modelo Tiquetera
+        Valor = beneficios_tiquetera.objects.all() 
+        # Se convierte el queryset en una lista de diccionarios con los valores de cada objeto
+        Valores_list = list(Valor.values())
+        # Se retorna la lista en formato JSON sin necesidad de serialización (safe=False permite retornar listas)
+        return JsonResponse(Valores_list, safe=False) 
+    def post(self,request):
+        try:
+            if request.method == "POST":
+                beneficio = request.data.get("beneficio")
+                horas_disponibles  = 2
+                tipo = request.data.get("tipo")
+                if beneficio and horas_disponibles and tipo:
+                    data = beneficios_tiquetera(
+                        beneficio = beneficio,
+                        horas_disponibles = horas_disponibles,
+                        tipo = tipo
+                    )
+                    data.save()
+                    return JsonResponse({"message":"Datos guardados correctamente"})
+        except Exception as e:
+            return JsonResponse({"message":"No se pueden guardar los datos"})
+        
+    def put(self,request,id):
+        beneficios_tiqueteras = get_object_or_404(beneficios_tiquetera,id=id)
+        beneficios_tiqueteras.beneficio = request.data.get("beneficio")
+        beneficios_tiqueteras.save()
+        print(beneficios_tiqueteras)
+        return JsonResponse({"message": "Registro actualizado con exito", "status":200})

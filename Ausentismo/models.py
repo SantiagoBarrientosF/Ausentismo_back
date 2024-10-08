@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-
+from django.contrib.auth.models import User
 
 # Create your models here.     
 class Vacaciones(models.Model):  
@@ -12,9 +12,13 @@ class Vacaciones(models.Model):
     dias_vacaciones = models.CharField(max_length= 5)
     campaña = models.CharField(max_length=100)
     cargo = models.CharField(max_length=100)
-    fecha_inicio = models.DateField(timezone.now())
+    fecha_inicio = models.DateField(default=timezone.now())
     fecha_fin = models.DateField()
-    fecha_incorporacion = models.DateField(timezone.now())
+    fecha_incorporacion = models.DateField(default=timezone.now())
+    observaciones = models.CharField(max_length=80)
+    User_id = models.ForeignKey(User,on_delete=models.CASCADE,null=True,default=0)
+    periodo = models.CharField(max_length=80)
+    
     def __str__(self,request):
         return f"{self.Codigo_vacacione}"
     def save(self, *args, **kwargs):
@@ -30,56 +34,70 @@ class Vacaciones(models.Model):
             self.Codigo_vacacione = f"Vac-{new_number:06d}" 
 
         super(Vacaciones, self).save(*args, **kwargs)  
-    observaciones = models.CharField(max_length=80)
-    jefe = models.CharField(max_length=80)
+class beneficios_tiquetera(models.Model):
+    beneficio = models.CharField(max_length=100)
+    horas_disponibles = models.CharField(max_length=80)
+    tipo = models.CharField(max_length=100,null=True)
 class Tiquetera(models.Model):    
     cedula = models.CharField(max_length=100)
     codigo_tiquetera = models.CharField(max_length=100,unique=True,blank=True)
     nombre = models.CharField(max_length=100)
     campaña = models.CharField(max_length=100)    
-    jefe = models.CharField(max_length=100)
-    fecha_peticion = models.DateField()
+    User_id = models.ForeignKey(User,on_delete=models.CASCADE,null=True,default=0)
     estado = models.CharField(max_length=100)
-    beneficios = models.CharField(max_length=100)
-    sede = models.CharField(max_length=100)
-    tipo_tiquetera = models.CharField()
+    beneficios = models.CharField(max_length=100, null = True)
+    correo = models.CharField(max_length=100)
+    tipo = models.CharField(max_length=100,null=True)
+
     def __str__(self,request):
         return f"{self.codigo_tiquetera}"
     def save(self, *args, **kwargs):
-        if not self.codigo_tiquetera:  
-            last_tiquetera = Tiquetera.objects.all().order_by('id').last()
-            if last_tiquetera and self.tipo_tiquetera == "emocional":
-                last_codigo = last_tiquetera.codigo_tiquetera
-                last_number = int(last_codigo.split('-')[1])
-                new_number = last_number + 1
-            else:
-                new_number = 1  
+     if not self.codigo_tiquetera:
+        last_tiquetera = Tiquetera.objects.all().order_by('id').last()
         
-            self.codigo_tiquetera = f"Tiq_emoc-{new_number:06d}" 
+        if last_tiquetera:
+            last_codigo = last_tiquetera.codigo_tiquetera
             
-        if last_tiquetera and self.tipo_tiquetera == "personal":
-                last_codigo = last_tiquetera.codigo_tiquetera
-                last_number = int(last_codigo.split('-')[1])
-                new_number = last_number + 1
+            
+            try:
+                last_number_Admin = int(last_codigo.split('-')[-1])
+                last_number_Rionegro = int(last_codigo.split('-')[-1])
+                last_number_Medellin = int(last_codigo.split('-')[-1])
+            except ValueError:
+                last_number_Admin = 0  
+                last_number_Rionegro = 0  
+                last_number_Medellin = 0  
+            
+            new_number_admin = last_number_Admin + 1
+            new_number_Rionegro_Ceja = last_number_Rionegro + 1
+            new_number_Medellin_Bogota = last_number_Medellin + 1
         else:
-                new_number = 1  
+            new_number_admin = 1
+            new_number_Rionegro_Ceja =  1
+            new_number_Medellin_Bogota =  1
+
         
-        self.codigo_tiquetera = f"Tiq_pers-{new_number:06d}" 
-        
-        super(Tiquetera, self).save(*args, **kwargs)
+        if self.tipo == "Medellin/Bogota":
+            self.codigo_tiquetera = f"Tiq_Med-Bog-{new_number_Medellin_Bogota:06d}" 
+        elif self.tipo == "Rionegro/La Ceja":
+            self.codigo_tiquetera = f"Tiq_Ceja-Rio-{new_number_Rionegro_Ceja:06d}"
+        elif self.tipo == "Administrativos":
+            self.codigo_tiquetera = f"Tiq_Adm-{new_number_admin:06d}"
+
+     super(Tiquetera, self).save(*args, **kwargs)
 class Permisos(models.Model):
     codigo_permiso = models.CharField(unique=True,blank=True,null=True)
     cedula = models.CharField(max_length=30)
     nombre = models.CharField (max_length=100)   
     correo = models.CharField (max_length=100)   
-    fecha_ingreso_empresa = models.DateField(timezone.now())
+    fecha_ingreso_empresa = models.DateField(default=timezone.now())
     campaña = models.CharField(max_length=100)
     cargo = models.CharField(max_length=100)
-    fecha_peticion = models.DateField(timezone.now())
+    fecha_peticion = models.DateField(default=timezone.now())
     fecha_inicio = models.DateField(default=timezone.now())
     fecha_fin = models.DateField(default=timezone.now())
     fecha_incorporacion = models.DateField(timezone.now())
-    jefe = models.CharField(max_length=80)
+    User_id = models.ForeignKey(User,on_delete=models.CASCADE,null=True,default=0)
     tipo_permiso = models.CharField(max_length=80)
     parentesco = models.CharField(max_length=100,null=True)
     
@@ -102,5 +120,37 @@ class Permisos(models.Model):
     
 class Historial_permisos(models.Model):
     id_permisos = models.ForeignKey(Permisos,on_delete=models.CASCADE,null = True)
-    fecha = models.DateTimeField(timezone.now())
-    Estados  = models.CharField(max_length=100)
+    codigo_permiso = models.CharField(unique=True,blank=True,null=True)
+    cedula = models.CharField(max_length=30,null=True)
+    nombre = models.CharField (max_length=100,null=True)   
+    fecha_ingreso_empresa = models.DateField(default=timezone.now())
+    campaña = models.CharField(max_length=100,null=True)
+    cargo = models.CharField(max_length=100,null=True)
+    fecha_peticion = models.DateField(default=timezone.now())
+    fecha_inicio = models.DateField(default=timezone.now())
+    fecha_fin = models.DateField(default=timezone.now())
+    fecha_incorporacion = models.DateField(default=timezone.now())
+    jefe = models.CharField(max_length=80,null=True)
+    tipo_permiso = models.CharField(max_length=80,null=True)
+class Historial_vacaciones(models.Model):    
+    Codigo_vacacione = models.CharField(unique=True,blank=True)  
+    cedula = models.CharField(max_length=30)
+    nombre = models.CharField (max_length=100)   
+    correo = models.CharField (max_length=100)   
+    fecha_ingreso_empresa = models.DateField(timezone.now())
+    dias_vacaciones = models.CharField(max_length= 5)
+    campaña = models.CharField(max_length=100)
+    cargo = models.CharField(max_length=100)
+    fecha_inicio = models.DateField(timezone.now())
+    fecha_fin = models.DateField()
+    fecha_incorporacion = models.DateField(timezone.now())
+    periodo = models.CharField(max_length=100)
+    
+class Historial_tiquetera(models.Model):    
+    codigo_tiquetera = models.CharField(max_length=100,unique=True,blank=True)
+    cedula = models.CharField(max_length=100)
+    nombre = models.CharField(max_length=100)
+    campaña = models.CharField(max_length=100)    
+    estado = models.CharField(max_length=100)
+    beneficios = models.CharField(max_length=100)
+    tipo_tiquetera = models.CharField()
