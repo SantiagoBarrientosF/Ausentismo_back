@@ -10,8 +10,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 
 class Tiqueteradata(APIView):
-    #    authentication_classes = [TokenAuthentication]
-    #    permission_classes = [IsAuthenticated]
+    # authentication_classes = [TokenAuthentication]
+    # permission_classes = [IsAuthenticated]
 
     # Método GET para obtener todos los registros de la tabla Tiquetera
     def get(self, request):    
@@ -31,26 +31,25 @@ class Tiqueteradata(APIView):
             datos_api = get_data_api(cedula)
             if not datos_api:
                 return JsonResponse({"message":"No se pudo encontrar el usuario"}, status=404)
-
             nombre = datos_api.get('Nombre')
             correo = request.data.get('correo')
-            campaña = datos_api.get('Campaña')
+            campana = datos_api.get('Campaña')
             # fecha_peticion = date.today()
             tipo = request.data.get('tipo')
             estado = request.data.get('estado')
             beneficios = request.data.get('beneficio')
-            User_id = request.data.get('jefe')
-            jefe = User.objects.get(id=User_id)
+            Jefe_id = request.data.get('jefe')
+            jefe = User.objects.get(id=Jefe_id)
             data = Tiquetera(
                     cedula = cedula,
                     nombre = nombre,
                     correo = correo,
                     # fecha_peticion = fecha_peticion,
-                    campaña = campaña,
+                    campana = campana,
                     tipo = tipo,
                     estado = estado,
                     beneficios = beneficios,
-                    User_id = jefe
+                    Jefe_id = jefe
                 )
             data.save()
             

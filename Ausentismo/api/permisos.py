@@ -1,12 +1,14 @@
 from Ausentismo.models import *
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated 
 from Ausentismo.api.serializer import *
 from datetime import date
+from django.contrib.auth.models import User
 from Ausentismo.api.backend import *
 # from Ausentismo.api.backend import get_datos_api
+from django.shortcuts import get_object_or_404
 import requests
 
 # Función para obtener datos de un usuario a través de una API externa, utilizando la 'cedula'
@@ -60,7 +62,7 @@ class Permisosdata(APIView):
           # Se extraen datos específicos de la respuesta de la API
           nombre = datos_api.get('Nombre')
           fecha_ingreso_empresa = datos_api.get('Fecha_ingreso')
-          campaña = datos_api.get('Campaña')
+          campana = datos_api.get('Campaña')
           cargo = datos_api.get('Cargo')
           
           # Se obtienen más valores del cuerpo de la solicitud
@@ -72,28 +74,28 @@ class Permisosdata(APIView):
           jefe = request.data.get('jefe')
           parentesco = request.data.get('parentesco')
           tipo_permiso = request.data.get('tipo_permiso')
-          User_id = User.objects.get(id=jefe)
+          Jefe_id = User.objects.get(id=jefe)
           # Verifica que todos los campos requeridos tengan datos válidos
-          if nombre and correo and fecha_ingreso_empresa and campaña and cargo and fecha_peticion and fecha_incorporacion and jefe:
+          if nombre and correo and fecha_ingreso_empresa and campana and cargo and fecha_peticion and fecha_incorporacion and jefe:
           # Crear una nueva instancia del modelo 'Permisos' con los datos proporcionados
             data = Permisos(
               cedula=cedula,
               nombre=nombre,
               correo=correo,
               fecha_ingreso_empresa=fecha_ingreso_empresa,
-              campaña=campaña,
+              campana=campana,
               cargo=cargo,
               fecha_peticion=fecha_peticion,
               fecha_inicio=fecha_inicio,
               fecha_fin=fecha_fin,
               fecha_incorporacion=fecha_incorporacion,
-              User_id=User_id,
+              Jefe_id=Jefe_id,
               parentesco=parentesco,
               tipo_permiso=tipo_permiso
             )
-              # Crear una nueva instancia del modelo 'Permisos' con los datos proporcionados
             # Guardar el nuevo registro en la base de datos
             data.save()
+            # Crear una nueva instancia del modelo 'Historial_Permisos' con los datos proporcionados
             data_historial_permisos = Historial_permisos(
               
               codigo_permiso = data.codigo_permiso,
@@ -114,6 +116,24 @@ class Permisosdata(APIView):
             # Retornar la información del último registro en formato JSON junto con un mensaje de éxito
             return JsonResponse({'data': serializer_usuario.data, 'message': 'Datos agregados correctamente', "status":200})
       except Exception as e:
-            print(f"error{e}")
-            return JsonResponse({"message": "Ocurrió un error durante la solicitud","status" : 404})
+            return JsonResponse({"message": "Ocurrió un error durante la solicitud","status" : 404},status = 404)
+  def put(self,request,id):
+      observacion = get_object_or_404(Permisos,id=id)
+      observacion.observaciones = request.data.get("observaciones")
+      observacion.estado = request.data.get("estado")
+      observacion.save()
+      return JsonResponse({"message":"Datos actualizados correctamente","status":200},status = 200)
+    
+def filtrar_campañas(request,id):
+    try:
+        jefe = User.objects.get(id=id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'Jefe no encontrado',"status":400}, status=404)
+    campaña_jefe = jefe.last_name 
+    permisos_relacionados = Permisos.objects.filter(campana=campaña_jefe)
+    permisos_list = list(permisos_relacionados.values())
+    return JsonResponse({"data":permisos_list,"status":200},status = 200)
 
+
+    
+    

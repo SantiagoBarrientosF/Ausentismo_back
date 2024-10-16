@@ -8,6 +8,7 @@ from Ausentismo.models import *
 from django.shortcuts import  get_object_or_404 
 from django.views.decorators.csrf import csrf_exempt
 from Ausentismo.api.signals import *
+import bcrypt
 
 @api_view(['POST']) 
 def login(request):
@@ -18,9 +19,9 @@ def login(request):
     token, created = Token.objects.get_or_create(user = user)   
     serializer = UserSerializer(instance=user)
     for grupo in grupos:
-     roles = {
-        "rol":grupo.name
-     }
+        roles = {
+            "rol":grupo.name
+        }
     return Response({'token': token.key ,'user': serializer.data, 'roles':roles},status=status.HTTP_201_CREATED)
 
 @csrf_exempt

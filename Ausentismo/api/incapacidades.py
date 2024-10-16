@@ -2,16 +2,17 @@ from Ausentismo.models import *
 from Ausentismo.api.serializer import *
 from django.http import JsonResponse,HttpResponse
 from rest_framework.views import APIView
-from django.contrib.auth.models import User
 from django.http import JsonResponse 
 from django.http import HttpResponse
-from docx import Document
+import pandas as pd
+import io
+from collections import defaultdict,Counter
 
 class Incapacidadesdata(APIView):
-#    authentication_classes = [TokenAuthentication]
-#    permission_classes = [IsAuthenticated]
- def get(self,request):    
-      Valor= Permisos.objects.filter(tipo_permiso="Licencia remunerada") 
+#  authentication_classes = [TokenAuthentication]
+#  permission_classes = [IsAuthenticated]
+   def get(self,request):    
+      Valor= Permisos.objects.filter(tipo_permiso__in=["Licencia remunerada","Licencia no remunerada"]) 
       items_list = []
       for item in Valor: 
          item_dict = {
@@ -25,34 +26,38 @@ class Incapacidadesdata(APIView):
       return JsonResponse(items_list, safe=False) 
 
 
-def export_word(request):
-        permisos = Permisos.objects.all()
+def export_incapacidades(self):
+   incapacidades = Permisos.objects.filter(tipo_permiso__in=["Licencia remunerada","Licencia no remunerada"])
+   datos = []
+   
+   for solicitud in incapacidades:
+      datos.append({
+         "Cedula": solicitud.cedula,
+         "Nombre": solicitud.nombre,
+         "Cargo": solicitud.cargo,
+         "Campaña": solicitud.campaña,
+         "Fecha inicio incapacidad": solicitud.fecha_inicio,
+         "Fecha fin incapacidad": solicitud.fecha_fin,
+         "Tipo_permiso": solicitud.tipo_permiso,
+      })
+   df = pd.DataFrame(datos)
+   output  = io.BytesIO()
+   with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False)
+   response = HttpResponse(output.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+   response['Content-Disposition'] = 'attachment; filename=Informe_incapacidades.xlsx'
+   return response
 
-        document = Document()
-
-        document.add_heading('Lista de Permisos ' ,0)
-
-        table = document.add_table(rows=1, cols=5)
-
-        hdr_cells = table.rows[0].cells
-        hdr_cells[0].text = 'Nombre'
-        hdr_cells[1].text = 'Cargo'
-        hdr_cells[2].text = 'Campaña'
-        hdr_cells[3].text = 'Fecha Ingreso Empresa'
-        hdr_cells[4].text = 'Fecha Permiso'
-
-        for permiso in permisos:
-            row_cells = table.add_row().cells
-            row_cells[0].text = permiso.nombre
-            row_cells[1].text = permiso.cargo
-            row_cells[2].text = permiso.campaña
-            row_cells[3].text = str(permiso.fecha_ingreso_empresa)
-            row_cells[4].text = str(permiso.fecha_peticion)
-
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-        response['Content-Disposition'] = 'attachment; filename="Informes_Incapacaidades_Andes.docx"'
-
-        document.save(response)
-
-        return response
- 
+def Contarincapacidades_individual(self):
+      incapacidades = Permisos.objects.filter(tipo_permiso__in=["Licencia remunerada", "Licencia no remunerada"])
+      incapacidad_por_campaña = defaultdict(Counter)
+      for incapacidad in incapacidades:
+         incapacidad_por_campaña[incapacidad.campaña][incapacidad.nombre] += 1
+      return JsonResponse(dict(incapacidad_por_campaña),safe=False)
+   
+def Contarincapacidades_campaña(self):
+      incapacidades = Permisos.objects.filter(tipo_permiso__in=["Licencia remunerada", "Licencia no remunerada"])
+      incapacidad_por_campaña = defaultdict(Counter)
+      for incapacidad in incapacidades:
+         incapacidad_por_campaña[incapacidad.campaña][incapacidad.campaña]+= 1
+      return JsonResponse(dict(incapacidad_por_campaña),safe=False)
