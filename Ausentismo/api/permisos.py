@@ -1,47 +1,18 @@
-from Ausentismo.models import *
-from django.http import JsonResponse
+from Ausentismo.models import Permisos
 from rest_framework.views import APIView
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated 
 from Ausentismo.api.serializer import *
 from datetime import date
 from django.contrib.auth.models import User
-from Ausentismo.api.backend import *
-# from Ausentismo.api.backend import get_datos_api
+from Ausentismo.api.email import *
 from django.shortcuts import get_object_or_404
-import requests
+from django.db.models import Case,When,CharField
+from rest_framework.response import Response
+from django.http import JsonResponse
+from Ausentismo.api.email import enviar_correo_asesor,enviar_correo_lider
+from Ausentismo.api.APIs import get_data_api
 
-# Función para obtener datos de un usuario a través de una API externa, utilizando la 'cedula'
-def get_data_api(cedula):
-  print("llamando la api..")
-  # URL de la API a la que se realiza la solicitud, basada en el valor de 'cedula'
-  api_url = f"http://127.0.0.1:8001/api/users/{cedula}"
-  headers = {
-    "accept": "application/json",
-    'Connection': 'keep-alive',
-  }
-  # Imprime la URL generada para depuración
-  print(api_url)
-
-  try:
-    # Realiza la solicitud GET a la API con los encabezados definidos
-    response = requests.get(api_url, headers=headers)
-    # Si la respuesta es exitosa (código 200), devuelve los datos en formato JSON
-    if response.status_code == 200:
-      datos = response.json()
-      print(datos)
-      return datos
-    else:
-      # Si no es exitosa, devuelve 'None'
-      return None
-  except requests.exceptions.RequestException as e:
-    # Maneja cualquier error de la solicitud y lo imprime para depuración
-    print(f"Error: {e}")
-    return None
 # Vista basada en clases para manejar datos de permisos
 class Permisosdata(APIView):
-  # authentication_classes = [TokenAuthentication]
-  # permission_classes = [IsAuthenticated]
   # Método GET para obtener todos los registros del modelo 'Permisos'
   def get(self, request):
       # Se obtienen todos los objetos de la tabla 'Permisos'
@@ -49,7 +20,7 @@ class Permisosdata(APIView):
       # Se convierte el queryset a una lista de diccionarios con los valores de cada objeto
       Valores_list = list(Valor.values())
       # Se devuelve la lista en formato JSON, permitiendo que sea una lista gracias a 'safe=False'
-      return JsonResponse(Valores_list, safe=False)
+      return Response(Valores_list)
   # Método POST para agregar un nuevo registro en la tabla 'Permisos'
   def post(self, request):
     # Verificar que el método sea POST
@@ -69,8 +40,7 @@ class Permisosdata(APIView):
           correo = request.data.get('correo')
           fecha_peticion = date.today()  # Fecha actual de la petición
           fecha_inicio = request.data.get("fecha_inicio")  # Fecha de inicio
-          fecha_fin = request.data.get("fecha_fin")  # Fecha de fin
-          fecha_incorporacion = request.data.get('fecha_incorporacion')
+          fecha_incorporacion = request.data.get('fecha_fin')
           jefe = request.data.get('jefe')
           parentesco = request.data.get('parentesco')
           tipo_permiso = request.data.get('tipo_permiso')
@@ -87,7 +57,6 @@ class Permisosdata(APIView):
               cargo=cargo,
               fecha_peticion=fecha_peticion,
               fecha_inicio=fecha_inicio,
-              fecha_fin=fecha_fin,
               fecha_incorporacion=fecha_incorporacion,
               Jefe_id=Jefe_id,
               parentesco=parentesco,
@@ -95,45 +64,61 @@ class Permisosdata(APIView):
             )
             # Guardar el nuevo registro en la base de datos
             data.save()
-            # Crear una nueva instancia del modelo 'Historial_Permisos' con los datos proporcionados
-            data_historial_permisos = Historial_permisos(
-              
-              codigo_permiso = data.codigo_permiso,
-              cedula = cedula,
-              nombre = nombre,
-              cargo  = cargo,
-              fecha_ingreso_empresa = fecha_ingreso_empresa,
-              fecha_fin = fecha_fin,
-              fecha_inicio = fecha_inicio,
-              tipo_permiso = tipo_permiso,
-              fecha_peticion  = fecha_peticion
-            )
-            data_historial_permisos.save()
-            # Obtener el último registro guardado de la tabla 'Permisos'
-            ultimo_usuario = Permisos.objects.last()
-            # Serializar ese objeto usando el serializador correspondiente (Permisoserializar)
-            serializer_usuario = Permisoserializar(ultimo_usuario) 
-            # Retornar la información del último registro en formato JSON junto con un mensaje de éxito
-            return JsonResponse({'data': serializer_usuario.data, 'message': 'Datos agregados correctamente', "status":200})
+            # Envio del correo al asesor
+            subject = f"<h1>Hola {nombre}</h1>"
+            body = "<h2>Hola su solicitud ha sido enviada y sera respondida prontamente</h2><br><p>No responder</p>"
+            to_email = [correo]
+            enviar_correo_asesor(subject,body,to_email)
+            #envio del correo al lider
+            subject_lider = f"<h1>Hola {Jefe_id.first_name}</h1>"
+            body_lider = f"<h2>Se ha recibido la siguiente solicitud de permiso de {nombre}</h2><br>\
+            <p><strong>Codigo permiso:</strong> {data.codigo_permiso}</p><br>\
+            <p><strong>Nombre completo:</strong> {nombre}</p><br>\
+            <p><strong>Numero de identificacion:</strong> {cedula}</p><br>\
+            <p><strong>Correo:</strong> {correo}</p><br>\
+            <p><strong>Fecha de ingreso a la empresa:</strong> {fecha_ingreso_empresa}</p><br>\
+            <p><strong>Campaña:</strong> {campana}</p><br>\
+            <p><strong>Cargo:</strong> {cargo}</p><br>\
+            <p><strong>Fecha inicio permiso:</strong> {fecha_inicio}</p><br>\
+            <p><strong>Fecha fin permiso:</strong> {fecha_incorporacion}</p><br>\
+            <p><strong>Jefe inmediato:</strong> {Jefe_id.first_name}</p><br>\
+            <p><strong>Tipo permiso:</strong> {tipo_permiso}</p><br>\
+            <button>Aceptar</button>"
+            to_email_asesor = [Jefe_id.email]
+            enviar_correo_lider(subject_lider,body_lider,to_email_asesor)
+            # retornar la data del registro guardado
+            
+            ultimo_permiso = Permisos.objects.last()
+            serializer_permisos = Permisoserializar(ultimo_permiso)
+            return Response({'data': serializer_permisos.data, 'message': 'Datos agregados correctamente', "status": 200},status = 200)
       except Exception as e:
-            return JsonResponse({"message": "Ocurrió un error durante la solicitud","status" : 404},status = 404)
+            return Response({"message": f"Ocurrió un error durante la solicitud{e}: ","status" : 404},status = 404)
+          
   def put(self,request,id):
       observacion = get_object_or_404(Permisos,id=id)
       observacion.observaciones = request.data.get("observaciones")
       observacion.estado = request.data.get("estado")
       observacion.save()
-      return JsonResponse({"message":"Datos actualizados correctamente","status":200},status = 200)
+
+      if observacion.estado == "Aprobado":
+        subject = f"<h1>Hola {observacion.nombre}</h1>"
+        body = "<h2>Su solicitud de permiso ha sido aprobada</h2><br><p>No responder</p>"
+        to_email = [observacion.correo]
+        enviar_correo_asesor(subject,body,to_email)
+      else:
+        subject = f"<h1>Hola {observacion.nombre}</h1>"
+        body = "<h2>Su solicitud de permiso ha sido rechazada</h2><br><p>No responder</p>"
+        to_email = [observacion.correo]
+        enviar_correo_asesor(subject,body,to_email)
+      return Response({"message":"Datos actualizados correctamente","status":200},status = 200)
     
 def filtrar_campañas(request,id):
     try:
         jefe = User.objects.get(id=id)
     except User.DoesNotExist:
-        return JsonResponse({'error': 'Jefe no encontrado',"status":400}, status=404)
+        return Response({'error': 'Jefe no encontrado',"status":400}, status=404)
+      
     campaña_jefe = jefe.last_name 
-    permisos_relacionados = Permisos.objects.filter(campana=campaña_jefe)
+    permisos_relacionados = Permisos.objects.filter(campana=campaña_jefe).annotate(permisos_pendientes=Case(When(estado="Pendiente",then=0),default=1,output_field=CharField(),)).order_by('permisos_pendientes')
     permisos_list = list(permisos_relacionados.values())
     return JsonResponse({"data":permisos_list,"status":200},status = 200)
-
-
-    
-    

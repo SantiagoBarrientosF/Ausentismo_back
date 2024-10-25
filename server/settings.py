@@ -47,6 +47,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8001",
 ]
+CORS_EXPOSE_HEADER=['Content-Type']
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -136,11 +137,12 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Looking to send emails in production? Check out our Email API/SMTP product!
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+EMAIL_HOST_USER = 'f7a28c44449c62'
+EMAIL_HOST_PASSWORD = 'e7fa7b0086c317'
+EMAIL_PORT = '2525'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'notificacionesandesbpo@gmail.com'  
-EMAIL_HOST_PASSWORD = '*-Faker2002-*'  
+EXTERNAL_API_URL = "http://127.0.0.1:8001/api/users/"
 
+EXTERNAL_API_URL_AUSENTISMO = "http://127.0.0.1:8001/api/Users-Ausentismo/"

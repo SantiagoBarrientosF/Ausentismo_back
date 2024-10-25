@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from .serializer import UserSerializer
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User,Group
 from rest_framework import  status 
 from Ausentismo.models import *
 from django.shortcuts import  get_object_or_404 
@@ -40,14 +40,17 @@ def logout(request):
 
 @api_view(['POST']) 
 def register(request):
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        Usuario = serializer.save()   
-        Usuario = User.objects.get(username=serializer.data['username'])
-        Usuario.set_password(request.data['password'])
-        Usuario.save()
-        token = Token.objects.create(user = Usuario)
-        return Response({'token': token.key,'user': serializer.data},status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
-
-    
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            Usuario = serializer.save()   
+            Usuario = User.objects.get(username=serializer.data['username'])
+            Usuario.set_password(request.data['password'])
+            try:
+                rol = Group.objects.get(name=request.data['rol'])
+                Usuario.groups.add(rol)
+            except Group.DoesNotExist:
+                return Response({"error": "El grupo especificado no existe"}, status=status.HTTP_400_BAD_REQUEST)
+            Usuario.save()
+            token = Token.objects.create(user = Usuario)
+            return Response({'token': token.key,'user': serializer.data},status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)

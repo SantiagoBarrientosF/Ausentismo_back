@@ -2,18 +2,17 @@ from Ausentismo.api.serializer import *
 import pandas as pd
 import io
 from django.http import HttpResponse
-from datetime import date
-import datetime
-from django.utils.timezone import now
+from datetime import datetime
+from rest_framework.views import APIView
+from django.http import JsonResponse
 
-# Obtener el día de hoy
-hoy = now().date()
-def Exporte_permisos_quincenal(self):
-        datos = []
-        permisos = Permisos.objects.all()
-        fecha = date.today()
-        for permiso in permisos:
-            if permiso.fecha_peticion ==  fecha:
+class Exporte_gestiones(APIView):        
+    def Exporte_permisos(self,id,fecha_inicio,fecha_fin):
+            datos = []
+            permisos = Permisos.objects.filter(Jefe_id = id, 
+            fecha_peticion__gte=fecha_inicio,
+            fecha_peticion__lte=fecha_fin).order_by("codigo_permiso")
+            for permiso in permisos:
                 datos.append({
                     'Codigo Permiso': permiso.codigo_permiso,
                     'Cedula':permiso.cedula,
@@ -24,95 +23,37 @@ def Exporte_permisos_quincenal(self):
                     'Fecha fin permiso':permiso.fecha_fin,
                     'Tipo permiso':permiso.tipo_permiso,
                 })
-        df = pd.DataFrame(datos)
-        output = io.BytesIO() 
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False)
+            return datos
         
-        response = HttpResponse(output.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=Informe_permisos.xlsx'
-        return response
-def Exporte_permisos_semanal(self):
+    def get(self, request,*args, **kwargs):
+        id  = self.kwargs.get('id')
+        fecha_inicio = self.kwargs.get('fecha_inicio')
+        fecha_fin = self.kwargs.get('fecha_fin')
+        tipo_permiso = self.kwargs.get('tipo_permiso')
+        # Cambiar formato de la fecha
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+            fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+            if tipo_permiso == "permiso":
+                datos = self.Exporte_permisos(id,fecha_inicio, fecha_fin)
+            elif tipo_permiso == "vacaciones":
+                datos = self.Exporte_vacaciones(id,fecha_inicio, fecha_fin)    
+            elif tipo_permiso == "tiquetera":
+                datos = self.Exporte_Tiquetera(id,fecha_inicio, fecha_fin)     
+            df = pd.DataFrame(datos)
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False)
+            response = HttpResponse(output.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename=Informe_{tipo_permiso}_{fecha_inicio}_{fecha_fin}.xlsx'
+            return response
+        except Exception as e:
+            return JsonResponse({"message":f"No se puede descargar el archivo: {e}"},status = 500)
+    def Exporte_vacaciones(self,id,fecha_inicio,fecha_fin):
         datos = []
-        permisos = Permisos.objects.all()
-        fecha = date.today()
-        inicio_semana  = datetime.timedelta(fecha.weekday())
-        fin_semana = inicio_semana + datetime.timedelta(days=6)
-        for permiso in permisos:
-            if permiso.fecha_peticion in range(inicio_semana,fin_semana):
-                datos.append({
-                    'Codigo Permiso': permiso.codigo_permiso,
-                    'Cedula':permiso.cedula,
-                    'Nombre':permiso.nombre,
-                    'Campaña':permiso.campana,
-                    'Cargo':permiso.cargo,
-                    'Fecha inicio permiso':permiso.fecha_inicio,
-                    'Fecha fin permiso':permiso.fecha_fin,
-                    'Tipo permiso':permiso.tipo_permiso,
-                })
-        df = pd.DataFrame(datos)
-        output = io.BytesIO() 
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False)
-        
-        response = HttpResponse(output.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=Informe_permisos.xlsx'
-        return response
-def Exporte_permisos_mensual(self):
-        datos = []
-        permisos = Permisos.objects.all()
-        fecha_actual = date.today()
-        mes_actual = fecha_actual.month
-        print(f"mes:{mes_actual}")
-        for permiso in permisos:
-            print(permiso.fecha_peticion.month)
-            if permiso.fecha_peticion.month == mes_actual:
-                    datos.append({
-                        'Codigo Permiso': permiso.codigo_permiso,
-                        'Cedula':permiso.cedula,
-                        'Nombre':permiso.nombre,
-                        'Campaña':permiso.campana,
-                        'Cargo':permiso.cargo,
-                        'Fecha inicio permiso':permiso.fecha_inicio,
-                        'Fecha fin permiso':permiso.fecha_fin,
-                        'Tipo permiso':permiso.tipo_permiso,
-                    })
-        df = pd.DataFrame(datos)
-        output = io.BytesIO() 
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False)
-        
-        response = HttpResponse(output.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=Informe_permisos.xlsx'
-        return response
-def Exporte_permisos_anual(self):
-        datos = []
-        fecha  = date.today()
-        anio = fecha.year
-        permisos = Permisos.objects.all()
-        for permiso in permisos:
-            if permiso.fecha_peticion.year == anio:
-                datos.append({
-                    'Codigo Permiso': permiso.codigo_permiso,
-                    'Cedula':permiso.cedula,
-                    'Nombre':permiso.nombre,
-                    'Campaña':permiso.campana,
-                    'Cargo':permiso.cargo,
-                    'Fecha inicio permiso':permiso.fecha_inicio,
-                    'Fecha fin permiso':permiso.fecha_fin,
-                    'Tipo permiso':permiso.tipo_permiso,
-                })
-        df = pd.DataFrame(datos)
-        output = io.BytesIO() 
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False)
-        
-        response = HttpResponse(output.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=Informe_permisos.xlsx'
-        return response            
-def Exporte_vacaciones(self):
-        datos = []
-        vacaciones = Vacaciones.objects.all()
+        vacaciones = Vacaciones.objects.filter(Jefe_id =id,
+        fecha_peticion__gte=fecha_inicio,
+        fecha_peticion__lte=fecha_fin).order_by("Codigo_vacacione")
         for solicitud in vacaciones:
             datos.append({
                 "Codigo Vacacaciones":solicitud.Codigo_vacacione,
@@ -124,16 +65,13 @@ def Exporte_vacaciones(self):
                 "Fecha fin vacaciones":solicitud.fecha_incorporacion,
                 "Periodo":solicitud.periodo,
             })
-        df  =pd.DataFrame(datos)
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False)
-        response = HttpResponse(output.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=Informe_vacaciones.xlsx'
-        return response
-def Exporte_Tiquetera(self):
+        return datos
+    
+    def Exporte_Tiquetera(self,id,fecha_inicio,fecha_fin):
         datos = []
-        tiquetera = Tiquetera.objects.all()
+        tiquetera = Tiquetera.objects.filter(Jefe_id = id,
+        fecha_peticion__gte=fecha_inicio,
+        fecha_peticion__lte=fecha_fin).order_by("codigo_tiquetera")
         for solicitud in tiquetera:
             datos.append({
                 "Codigo Tiquetera":solicitud.codigo_tiquetera,
@@ -142,15 +80,7 @@ def Exporte_Tiquetera(self):
                 "Campaña":solicitud.campana,
                 "Beneficios":solicitud.beneficios,
                 "Tipo":solicitud.tipo,
-                "Estado":solicitud.estado
+                "Estado":solicitud.estado,
+                "Fecha peticion": solicitud.fecha_peticion
             })
-        df  =pd.DataFrame(datos)
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False)
-        response = HttpResponse(output.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=Informe_Tiquetera.xlsx'
-        return response
-    
-    
-    
+        return datos

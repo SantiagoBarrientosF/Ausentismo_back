@@ -21,9 +21,9 @@ class Vacacioneserializar(serializers.ModelSerializer):
 class Permisoserializar(serializers.ModelSerializer):
     class Meta:
         model = Permisos
-        fields = '__all__'                
+        fields = '__all__'                                          
 
-class Historialserializar(serializers.ModelSerializer):
+class Incapacidadesserializar(serializers.ModelSerializer):
     class Meta:
-        model = Historial_permisos
-        fields = '__all__'                              
+        model = Incapacidades
+        fields = '__all__'        
