@@ -129,21 +129,6 @@ class Permisos(models.Model):
             self.codigo_permiso = f"Per-{new_number:06d}" 
 
         super(Permisos, self).save(*args, **kwargs)
-
-# class Historial_permisos(models.Model):
-#     id_permisos = models.ForeignKey(Permisos,on_delete=models.CASCADE,null = True)
-#     codigo_permiso = models.CharField(unique=True,blank=True,null=True)
-#     cedula = models.CharField(max_length=30,null=True)
-#     nombre = models.CharField (max_length=100,null=True)   
-#     fecha_ingreso_empresa = models.DateField(default=timezone.now)
-#     campaña = models.CharField(max_length=100,null=True)
-#     cargo = models.CharField(max_length=100,null=True)
-#     fecha_peticion = models.DateField(default=timezone.now)
-#     fecha_inicio = models.DateField(default=timezone.now)
-#     fecha_fin = models.DateField(default=timezone.now)
-#     fecha_incorporacion = models.DateField(default=timezone.now)
-#     jefe = models.CharField(max_length=80,null=True)
-#     tipo_permiso = models.CharField(max_length=80,null=True)
     
 class Incapacidades(models.Model):    
     cedula = models.CharField(max_length=30,null=True)

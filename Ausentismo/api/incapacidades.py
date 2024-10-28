@@ -7,7 +7,7 @@ from django.http import HttpResponse
 import pandas as pd
 import io
 from collections import defaultdict,Counter
-from Ausentismo.api.permisos import get_data_api
+from Ausentismo.api.permisos import get_data_api,get_data_api_Gestiones
 from django.http import HttpResponse
 
 class Incapacidadesdata(APIView):
@@ -19,9 +19,11 @@ class Incapacidadesdata(APIView):
       if request.method == 'POST':
          # Se obtiene el valor de 'cedula' del cuerpo de la solicitud
          cedula = request.data.get("cedula")
+         tipo_gestion = "Incapacidad"
          # Se llama a la función 'get_data_api' para obtener datos adicionales de una API externa
       try:
             datos_api = get_data_api(cedula) 
+            Gestion_permisos_api = get_data_api_Gestiones(cedula,tipo_gestion) 
             # Se extraen datos específicos de la respuesta de la API
             nombre= datos_api.get('Nombre')
             campana= datos_api.get('Campaña')

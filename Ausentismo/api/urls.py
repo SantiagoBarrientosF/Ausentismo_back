@@ -13,7 +13,6 @@ from Ausentismo.api.incapacidades import Incapacidadesdata
 from Ausentismo.api.informe import Exporte_gestiones
 from Ausentismo.api.data_gestiones import DataGestiones
 from Ausentismo.api.graficas import DataGrafricas
-from Ausentismo.api.APIs import get_data_api_Contratacion
 
 urlpatterns = [
     path('login/', login.login ),
@@ -39,7 +38,7 @@ urlpatterns = [
     path("Gestion_vacaciones/<int:id>", filtrar_campañas_vacaciones),
     path("Gestion_permisos/<int:id>", filtrar_campañas),
     path("Historial-registros/<str:cedula>", HistorialData.as_view()),
-    path("Historial/", get_historial_all),
+    path("Historial/", HistorialMes.as_view()),
     path("data_gestiones/", DataGestiones.as_view()),
     path("data_graficas/", DataGrafricas.as_view()),
 ] 

@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from Ausentismo.api.serializer import Vacacioneserializar
-from Ausentismo.api.APIs import get_data_api
+from Ausentismo.api.APIs import get_data_api,get_data_api_Gestiones
 from django.shortcuts import get_object_or_404
 from datetime import date
 from django.db.models import Case,When,CharField
@@ -20,9 +20,11 @@ class vacacionessdata(APIView):
       if request.method == 'POST':
          # Se obtiene el valor de 'cedula' del cuerpo de la solicitud
          cedula = request.data.get("cedula")
+         tipo_gestion  = "Vacaciones"
          # Se llama a la función 'get_data_api' para obtener datos adicionales de una API externa
       try:
             datos_api = get_data_api(cedula) 
+            Gestion_Tiquetera_api = get_data_api_Gestiones(cedula,tipo_gestion) 
             # Se extraen datos específicos de la respuesta de la API
             nombre = datos_api.get('Nombre')
             fecha_ingreso_empresa = datos_api.get('Fecha_ingreso')
@@ -119,6 +121,6 @@ def obtener_vacaciones(request):
    return JsonResponse({
       'permisos negados': permisos_negados,
       'permisos aceptados': permisos_aceptados,
-      'total permisos': sum(permisos_count.values())
+      'total permisos': str(sum(permisos_count.values()))
    }, status=200)
    

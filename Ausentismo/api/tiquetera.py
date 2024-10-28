@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from rest_framework.views import APIView
 from Ausentismo.api.serializer import *
 from datetime import date
-from Ausentismo.api.APIs import get_data_api
+from Ausentismo.api.APIs import get_data_api,get_data_api_Gestiones
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.db.models import Case,When,CharField
@@ -25,8 +25,10 @@ class Tiqueteradata(APIView):
     # Verificar que el método sea POST
      if request.method == 'POST': 
         cedula = request.data.get("cedula")
+        tipo_gestion = "Tiquetera"
         try:
             datos_api = get_data_api(cedula)
+            Gestion_vacaciones_api = get_data_api_Gestiones(cedula,tipo_gestion) 
             if not datos_api:
                 return JsonResponse({"message":"No se pudo encontrar el usuario"}, status=404)
             nombre = datos_api.get('Nombre')
@@ -117,6 +119,7 @@ class beneficios(APIView):
         beneficios_tiqueteras.save()
         print(beneficios_tiqueteras)
         return JsonResponse({"message": "Registro actualizado con exito", "status":200})
+
 def filtrar_campañas_tiquerera(request,id):
     try:
         jefe = User.objects.get(id=id)

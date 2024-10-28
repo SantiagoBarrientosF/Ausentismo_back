@@ -20,7 +20,7 @@ class Exporte_gestiones(APIView):
                     'Campaña':permiso.campana,
                     'Cargo':permiso.cargo,
                     'Fecha inicio permiso':permiso.fecha_inicio,
-                    'Fecha fin permiso':permiso.fecha_fin,
+                    'Fecha fin permiso':permiso.fecha_incorporacion,
                     'Tipo permiso':permiso.tipo_permiso,
                 })
             return datos
@@ -40,6 +40,8 @@ class Exporte_gestiones(APIView):
                 datos = self.Exporte_vacaciones(id,fecha_inicio, fecha_fin)    
             elif tipo_permiso == "tiquetera":
                 datos = self.Exporte_Tiquetera(id,fecha_inicio, fecha_fin)     
+            elif tipo_permiso == "General":
+                datos = self.Exporte_general(id,fecha_inicio, fecha_fin)     
             df = pd.DataFrame(datos)
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -84,3 +86,20 @@ class Exporte_gestiones(APIView):
                 "Fecha peticion": solicitud.fecha_peticion
             })
         return datos
+def Exporte_general(self,id,fecha_inicio,fecha_fin):
+    datos = []
+    vacaciones = Vacaciones.objects.filter(Jefe_id =id,
+    fecha_peticion__gte=fecha_inicio,
+    fecha_peticion__lte=fecha_fin).order_by("Codigo_vacacione")
+    for solicitud in vacaciones:
+        datos.append({
+            "Codigo Vacacaciones":solicitud.Codigo_vacacione,
+            "Cedula":solicitud.cedula,
+            "Nombre":solicitud.nombre,
+            "Campaña":solicitud.campana,
+            "Cargo":solicitud.cargo,
+            "Fecha inicio vacaciones":solicitud.fecha_inicio,
+            "Fecha fin vacaciones":solicitud.fecha_incorporacion,
+            "Periodo":solicitud.periodo,
+        })
+    return datos

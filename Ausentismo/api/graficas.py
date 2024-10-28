@@ -1,5 +1,6 @@
 from Ausentismo.models import Permisos, Tiquetera, Vacaciones, Incapacidades
 from django.db.models import Count
+from collections import defaultdict
 from django.http import JsonResponse
 from rest_framework.views import APIView
 from Ausentismo.api.serializer import *
@@ -11,59 +12,93 @@ from datetime import datetime
 class DataGrafricas(APIView):
     def get(self, request):
         
+        # diccionarios de las graficas
         days = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
+        months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 
+        # consultas query a los modelos
         permisos_data = Permisos.objects.values('id', 'codigo_permiso', 'fecha_inicio', 'fecha_incorporacion')
         incapacidades_data = Incapacidades.objects.values('id', 'radicado', 'fecha_inicio', 'fecha_incorporacion')
+        tiqueteras_data = Tiquetera.objects.values('id', 'codigo_tiquetera', 'fecha_peticion', 'tipo')
+        vacaciones_data = Vacaciones.objects.values('id', 'Codigo_vacacione', 'dias_vacaciones', 'fecha_inicio','fecha_incorporacion')
         
+        # contadores dias
         contador_dias_permisos = {day: 0 for day in days}
         contador_dias_incapacidades = {day: 0 for day in days}
+        
+        # contadores meses
+        cont_mes_i = {month: 0 for month in months}
+        cont_mes_v = {month: 0 for month in months}
+        cont_mes_p = {month: 0 for month in months}
+        cont_mes_t = {month: 0 for month in months}
 
-        data_permi = []
         for permisos in permisos_data:
-            codigo = permisos.get('codigo_permiso')
             permiso_day_i = permisos.get('fecha_inicio')
-            permiso_day_f = permisos.get('fecha_incorporacion')
+
+            # contador meses
+            mes = permiso_day_i.month
+            mes_year = months[mes - 1]
+            cont_mes_p[mes_year] += 1
             
-            if permiso_day_i and permiso_day_f:
-                days_pass = (permiso_day_f - permiso_day_i).days
-                if days_pass == 0:
-                    days_pass = 0
+            # contador dias
+            if permiso_day_i:
                 dia_semana = days[permiso_day_i.weekday()]
                 contador_dias_permisos[dia_semana] += 1
-                
-                data_permi.append({
-                    'codigo_permiso': codigo,
-                    'dias_pass': days_pass,
-                })
-                
+            
         data_days_i = []  
         for incapacidad in incapacidades_data:
+            # data para las graficas
             in_radicado = incapacidad.get('radicado')
             incapacidad_day_i = incapacidad.get('fecha_inicio')
+
+            # contador meses
+            mes = incapacidad_day_i.month
+            mes_year = months[mes - 1]
+            cont_mes_i[mes_year] += 1
             incapacidad_day_f = incapacidad.get('fecha_incorporacion')
             
+            # contador dias
             if incapacidad_day_i and incapacidad_day_f:
-                days_pass = (incapacidad_day_f - incapacidad_day_i).days
+                # se suma 1 al final para un calculo mas acertado
+                days_pass = ((incapacidad_day_f - incapacidad_day_i).days) + 1
                 if days_pass == 0:
                     days_pass = 0
                 dia_semana_i = days[incapacidad_day_i.weekday()]
                 contador_dias_incapacidades[dia_semana_i] += 1
                 
+                # data incapacidades
                 data_days_i.append({
                     'radicado': in_radicado,
                     'dias_pass': days_pass,
                 })
+                
+        for tiquetera in tiqueteras_data:
+            fecha = tiquetera.get('fecha_peticion')
 
-        graficas_response = {
-            'permisos': {
-                'contador': contador_dias_permisos,
-                'data': data_permi
-            },
-            'incapacidades': {
-                'contador': contador_dias_incapacidades,
-                'data': data_days_i,
-            }
-        }
+            # contador meses
+            mes = fecha.month
+            mes_year = months[mes - 1]
+            cont_mes_t[mes_year] += 1
+            
+        for vacacion in vacaciones_data:
+            fecha = vacacion.get('fecha_inicio')
+
+            # contador meses
+            mes = fecha.month
+            mes_year = months[mes - 1]
+            cont_mes_v[mes_year] += 1
+            
+        # graficas response
+        graficas = {
+            'dias_incapacidades': {
+                'dias': contador_dias_incapacidades,
+                'data': data_days_i
+                },
+            'dias_permisos': contador_dias_permisos,
+            'meses_permisos': cont_mes_p,
+            'meses_incapacidades': cont_mes_i,
+            'meses_vacaciones': cont_mes_v,
+            'meses_tiquetera': cont_mes_t
+        } 
         
-        return JsonResponse(graficas_response, status=200, safe=False)
+        return JsonResponse(graficas, status=200, safe=False)

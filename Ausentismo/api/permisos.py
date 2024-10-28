@@ -9,33 +9,40 @@ from django.db.models import Case,When,CharField
 from rest_framework.response import Response
 from django.http import JsonResponse
 from Ausentismo.api.email import enviar_correo_asesor,enviar_correo_lider
-from Ausentismo.api.APIs import get_data_api
+from Ausentismo.api.APIs import get_data_api,get_data_api_Gestiones
+from rest_framework.async_view import async_view
+from django.views import async_view
+import asyncio
 
 # Vista basada en clases para manejar datos de permisos
+@async_view
 class Permisosdata(APIView):
   # Método GET para obtener todos los registros del modelo 'Permisos'
-  def get(self, request):
+  async def get(self, request):
       # Se obtienen todos los objetos de la tabla 'Permisos'
-      Valor = Permisos.objects.all()
+      Valor = await Permisos.objects.all()
       # Se convierte el queryset a una lista de diccionarios con los valores de cada objeto
       Valores_list = list(Valor.values())
       # Se devuelve la lista en formato JSON, permitiendo que sea una lista gracias a 'safe=False'
       return Response(Valores_list)
   # Método POST para agregar un nuevo registro en la tabla 'Permisos'
-  def post(self, request):
+  async def post(self, request):
     # Verificar que el método sea POST
     if request.method == 'POST':
         # Se obtiene el valor de 'cedula' del cuerpo de la solicitud
       cedula = request.data.get("cedula")
+      tipo_gestion = "Permiso"
         # Se llama a la función 'get_data_api' para obtener datos adicionales de una API externa
       try:
-          datos_api = get_data_api(cedula) 
+          datos_api,Gestiones_permisos_api = await asyncio.gather(
+            get_data_api(cedula),
+            get_data_api_Gestiones(cedula,tipo_gestion)
+          )
           # Se extraen datos específicos de la respuesta de la API
           nombre = datos_api.get('Nombre')
           fecha_ingreso_empresa = datos_api.get('Fecha_ingreso')
           campana = datos_api.get('Campaña')
           cargo = datos_api.get('Cargo')
-          
           # Se obtienen más valores del cuerpo de la solicitud
           correo = request.data.get('correo')
           fecha_peticion = date.today()  # Fecha actual de la petición
@@ -94,7 +101,7 @@ class Permisosdata(APIView):
       except Exception as e:
             return Response({"message": f"Ocurrió un error durante la solicitud{e}: ","status" : 404},status = 404)
           
-  def put(self,request,id):
+  async def put(self,request,id):
       observacion = get_object_or_404(Permisos,id=id)
       observacion.observaciones = request.data.get("observaciones")
       observacion.estado = request.data.get("estado")

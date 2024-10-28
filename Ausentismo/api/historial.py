@@ -1,10 +1,10 @@
 from Ausentismo.models import Permisos, Tiquetera, Vacaciones, Incapacidades
-from django.db.models import Count
+from rest_framework.response import Response
 from django.http import JsonResponse
 from rest_framework.views import APIView
 from Ausentismo.api.serializer import *
 from django.shortcuts import get_object_or_404
-from Ausentismo.api.APIs import get_data_api, get_data_api_Contratacion
+from Ausentismo.api.APIs import get_data_api, get_data_api_all
 
 class HistorialData(APIView):
     # endpoint historial
@@ -65,10 +65,13 @@ class HistorialData(APIView):
             }
         }
         return JsonResponse(historial_data, status = 200, safe=False)
-    
-def get_historial_all(self):
-    
-    # data personas
-    data_contratacion = get_data_api_Contratacion(self)
-    return JsonResponse(data_contratacion, status = 200, safe = False)
+
+# Historial each user
+class HistorialMes(APIView):
+    def get(self, request):
+        
+        data_historial = get_data_api_all(self)
+        return Response(data_historial, status = 200)
+
+
 
