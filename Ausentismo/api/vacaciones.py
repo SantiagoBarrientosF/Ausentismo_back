@@ -10,7 +10,7 @@ from django.db.models import Case,When,CharField
 from Ausentismo.api.email import enviar_correo_asesor,enviar_correo_lider
 from collections import defaultdict
 from django.db.models import Count
-
+from datetime import datetime
 class vacacionessdata(APIView):
    def get(self,request):    
       Valor= Vacaciones.objects.all() 
@@ -20,11 +20,11 @@ class vacacionessdata(APIView):
       if request.method == 'POST':
          # Se obtiene el valor de 'cedula' del cuerpo de la solicitud
          cedula = request.data.get("cedula")
-         tipo_gestion  = "Vacaciones"
+         
          # Se llama a la función 'get_data_api' para obtener datos adicionales de una API externa
       try:
             datos_api = get_data_api(cedula) 
-            Gestion_Tiquetera_api = get_data_api_Gestiones(cedula,tipo_gestion) 
+            Gestiones_vacaciones = get_data_api_Gestiones(cedula,"Vacaciones") 
             # Se extraen datos específicos de la respuesta de la API
             nombre = datos_api.get('Nombre')
             fecha_ingreso_empresa = datos_api.get('Fecha_ingreso')
@@ -35,10 +35,16 @@ class vacacionessdata(APIView):
             fecha_peticion = date.today()  # Fecha actual de la petición
             fecha_inicio = request.data.get("fecha_inicio")  # Fecha de inicio
             fecha_incorporacion = request.data.get('fecha_incorporacion')
+            fecha_terminacion = request.data.get('Fecha_Terminacion')
             jefe = request.data.get('jefe')
             dias_vacaciones = request.data.get('Dias_habiles')
-            observaciones = request.data.get('observaciones')
+            observaciones = request.data.get('Observaciones')
+            periodo = request.data.get('Periodo')
             Jefe_id = User.objects.get(id=jefe)
+            # Cambiar formato de la fecha
+            fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+            fecha_incorporacion = datetime.strptime(fecha_incorporacion, '%Y-%m-%d').date()
+            fecha_terminacion = datetime.strptime(fecha_terminacion, '%Y-%m-%d').date()
             # Verifica que todos los campos requeridos tengan datos válidos
             if nombre and correo and fecha_ingreso_empresa and campana and cargo and fecha_peticion and fecha_incorporacion and jefe and dias_vacaciones:
             # Crear una nueva instancia del modelo 'Permisos' con los datos proporcionados
@@ -52,6 +58,8 @@ class vacacionessdata(APIView):
                   fecha_peticion=fecha_peticion,
                   fecha_inicio=fecha_inicio,
                   fecha_incorporacion=fecha_incorporacion,
+                  fecha_terminacion=fecha_terminacion,
+                  periodo=periodo,
                   Jefe_id=Jefe_id,
                   dias_vacaciones = dias_vacaciones,
                   observaciones = observaciones
@@ -59,27 +67,28 @@ class vacacionessdata(APIView):
             # Guardar el nuevo registro en la base de datos
                data.save()   
                #  Enviar correo
-               subject = "<h1>Hola</h1>"
-               body = "<h2>Hola su solicitud ha sido enviada y sera respondida prontamente</h2><br><p><strong>No responder</strong></p>"
+               solicitudes ={
+                  'nombre': nombre,
+                  'tipo_gestion': "vacaciones",
+                  'codigo_vacaciones': data.Codigo_vacaciones
+               }  
                to_email = [correo]
-               enviar_correo_asesor(subject,body,to_email)
+               enviar_correo_asesor(to_email,solicitudes)
                #envio del correo al lider
-               subject_lider = "<h1>Hola</h1>"
-               body_lider = f"<h2>Se ha recibido la siguiente solicitud de vacaciones de {nombre}</h2><br>\
-               <p><strong>Codigo vacaciones:</strong> {data.Codigo_vacacione}</p><br>\
-               <p><strong>Nombre completo:</strong> {nombre}</p><br>\
-               <p><strong>Numero de identificacion:</strong> {cedula}</p><br>\
-               <p><strong>Correo:</strong> {correo}</p><br>\
-               <p><strong>Fecha de ingreso a la empresa:</strong> {fecha_ingreso_empresa}</p><br>\
-               <p><strong>Campaña:</strong> {campana}</p><br>\
-               <p><strong>Cargo:</strong> {cargo}</p><br>\
-               <p><strong>Fecha inicio vacaciones:</strong> {fecha_inicio}</p><br>\
-               <p><strong>Fecha fin vacaciones:</strong> {fecha_incorporacion}</p><br>\
-               <p><strong>Jefe inmediato:</strong> {Jefe_id.first_name}</p><br>\
-               <p><strong>Dias de vacaciones:</strong> {dias_vacaciones}</p><br>\
-               <button>Aceptar</button>"
+               solicitudes ={
+               'nombre': nombre,
+               'correo': correo,
+               'fecha_ingreso_empresa': fecha_ingreso_empresa,
+               'campana': campana,
+               'cargo': cargo,
+               'fecha_inicio': fecha_inicio,
+               'fecha_incorporacion': fecha_incorporacion,
+               'Jefe_id': Jefe_id.first_name,
+               'dias_vacaciones': dias_vacaciones,
+               'tipo_gestion': "vacaciones",
+               }
                to_email_lider = [correo]
-               enviar_correo_lider(subject_lider,body_lider,to_email_lider)
+               enviar_correo_lider(to_email_lider,solicitudes,)
                # Obtener el último registro guardado de la tabla 'Permisos'
                ultimo_usuario = Vacaciones.objects.last()
                # Serializar ese objeto usando el serializador correspondiente (Permisoserializar)
@@ -87,12 +96,26 @@ class vacacionessdata(APIView):
                # Retornar la información del último registro en formato JSON junto con un mensaje de éxito
                return JsonResponse({'data': serializer_usuario.data, 'message': 'Datos agregados correctamente', "status":200})
       except Exception as e:
-            return JsonResponse({"message":f"Ocurrió un error durante la solicitud:{str(e)}","status" : 404},status = 404)
+            return JsonResponse({"message":f"Ocurrió un error durante la solicitud :{str(e)}","status" : 404},status = 404)
    def put(self,request,id):
       observacion = get_object_or_404(Vacaciones,id=id)
       observacion.observaciones = request.data.get("observaciones")
       observacion.estado = request.data.get("estado")
       observacion.save()
+      if observacion.estado == "Aprobado":
+        solicitudes = {
+            'nombre': observacion.nombre,
+            'tipo_gestion': "permiso",
+            'estado': "aprobado"
+        }
+        enviar_correo_asesor([observacion.correo], solicitudes)
+      else:
+        solicitudes = {
+            'nombre': observacion.nombre,
+            'tipo_gestion': "permiso",
+            'estado': "negado"
+        }
+        enviar_correo_asesor([observacion.correo], solicitudes)
       return JsonResponse({"message":"Datos actualizados correctamente","status":200},status = 200)
    
 def filtrar_campañas_vacaciones(request,id):

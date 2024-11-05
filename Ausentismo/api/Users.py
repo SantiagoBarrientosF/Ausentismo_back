@@ -7,8 +7,8 @@ from Ausentismo.api.serializer import *
 from django.shortcuts import get_object_or_404
 
 class Usersdata(APIView):
-#    authentication_classes = [TokenAuthentication]
-#    permission_classes = [IsAuthenticated]
+   # authentication_classes = [TokenAuthentication]
+   # permission_classes = [IsAuthenticated]
    def get(self,request):    
       Valor= User.objects.filter(is_staff=True) 
       items_list = []
@@ -54,4 +54,19 @@ class update_conceptos(APIView):
          return JsonResponse({'data': 'Success', 'message': 'Datos actualizados correctamente'}) 
 
 
-
+class usuarios(APIView):
+  def get(self,request):    
+      Valor= User.objects.all()
+      items_list = []
+      for item in Valor: 
+         item_dict = {
+            'id':item.id,
+            'Username': item.username,
+            'First_name':item.first_name,
+            'Rol':item.groups.name,
+            'Last_name':item.last_name,
+            'Email':item.email, 
+         }
+         items_list.append(item_dict)
+      return JsonResponse({"data":items_list}, safe=False)
+   

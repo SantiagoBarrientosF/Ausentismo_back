@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 # Create your models here.     
 
 class Vacaciones(models.Model):  
-    Codigo_vacacione = models.CharField(unique=True,blank=True)  
+    Codigo_vacaciones  = models.CharField(unique=True,blank=True)  
     cedula = models.CharField(max_length=30,null=True)
     nombre = models.CharField (max_length=100,null=True)   
     correo = models.CharField (max_length=100,null=True)   
@@ -17,7 +17,8 @@ class Vacaciones(models.Model):
     campana = models.CharField(max_length=100)
     cargo = models.CharField(max_length=100)
     fecha_peticion = models.DateField(default=timezone.now)
-    fecha_inicio = models.DateField()
+    fecha_inicio = models.DateField(default=timezone.now)
+    fecha_terminacion = models.DateField(default=timezone.now)
     fecha_incorporacion = models.DateField(default=timezone.now)
     observaciones = models.CharField(max_length=80)
     Jefe_id = models.ForeignKey(User,on_delete=models.CASCADE,null=True,default=None)
@@ -25,25 +26,25 @@ class Vacaciones(models.Model):
     estado = models.CharField(max_length=80,default="Pendiente")
     
     def __str__(self,request):
-        return f"{self.Codigo_vacacione}"
+        return f"{self.Codigo_vacaciones}"
     def save(self, *args, **kwargs):
-        if not self.Codigo_vacacione:  
+        if not self.Codigo_vacaciones:  
             last_vacaciones = Vacaciones.objects.all().order_by('id').last()
             if last_vacaciones:
-                last_codigo = last_vacaciones.Codigo_vacacione
+                last_codigo = last_vacaciones.Codigo_vacaciones
                 last_number = int(last_codigo.split('-')[1])
                 new_number = last_number + 1
             else:
                 new_number = 1  
 
-            self.Codigo_vacacione = f"Vac-{new_number:06d}" 
+            self.Codigo_vacaciones = f"Vac-{new_number:06d}" 
 
         super(Vacaciones, self).save(*args, **kwargs)  
         
 class beneficios_tiquetera(models.Model):
     beneficio = models.CharField(max_length=100)
     horas_disponibles = models.CharField(max_length=80)
-    tipo = models.CharField(max_length=100,null=True)
+    tipo = models.CharField(max_length=100,null=True)   
     
 class Tiquetera(models.Model):    
     cedula = models.CharField(max_length=100,null=True)
@@ -139,11 +140,11 @@ class Incapacidades(models.Model):
     sede = models.CharField(max_length=100)
     doc_incapacidad =models.FileField(upload_to='incapacidades/', blank=True, null=True)
     lider = models.ForeignKey(User,on_delete=models.CASCADE,null=True,default=None)
-    fecha_inicio = models.DateField(default=timezone.now)
+    fecha_inicio_incapacidad = models.DateField(default=timezone.now)
+    fecha_terminacion_incapacidad = models.DateField(default=timezone.now)
     fecha_incorporacion = models.DateField(default=timezone.now)
     fecha_peticion = models.DateField(default=timezone.now)
     radicado = models.CharField(max_length=100,null=True)
     estado = models.CharField(max_length=100,default="Pendiente")
 
 
-    

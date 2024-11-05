@@ -9,16 +9,13 @@ class DataGestiones(APIView):
         
         valores_a_contar = ['Negado', 'Aceptado']
         
-        
+        # consultas query a los objetos de la bd
         permisos = Permisos.objects.filter(estado__in=valores_a_contar).values('estado').annotate(count=Count('id'))
-        
         vacaciones = Vacaciones.objects.filter(estado__in=valores_a_contar).values('estado').annotate(count=Count('id'))
-        
         tiqueteras = Tiquetera.objects.filter(estado__in=valores_a_contar).values('estado').annotate(count=Count('id'))
-        
         incapacidades = Incapacidades.objects.filter(estado__in=valores_a_contar).values('estado').annotate(count=Count('id'))
         
-
+        # diccionarios de los contadores
         permisos_count = defaultdict(int)
         vacaciones_count = defaultdict(int)
         tiqueteras_count = defaultdict(int)

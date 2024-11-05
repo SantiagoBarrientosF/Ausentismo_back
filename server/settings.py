@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-_ss7ctom6&&38hp&r@aqm)ol362kl7$en35%v2c@whsjqhl6xq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -65,7 +65,7 @@ ROOT_URLCONF = 'server.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'Ausentismo', 'api')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -130,19 +130,38 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+# STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Looking to send emails in production? Check out our Email API/SMTP product!
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-EMAIL_HOST_USER = 'f7a28c44449c62'
-EMAIL_HOST_PASSWORD = 'e7fa7b0086c317'
-EMAIL_PORT = '2525'
+#configuracion smtp para el envio de emails en gmail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'notificacionesandesbpo@gmail.com'
+EMAIL_HOST_PASSWORD = 'fogd kxjb ejrh uxyp'
+EMAIL_PORT = '587'
+EMAIL_USE_TLS = True
 
-EXTERNAL_API_URL = "http://127.0.0.1:8001/api/users/"
 
-EXTERNAL_API_URL_AUSENTISMO = "http://127.0.0.1:8001/api/Users-Ausentismo/"
+EXTERNAL_API_URL = "http://127.0.0.1:8001/api/Users-Ausentismo/"
+
+EXTERNAL_API_URL_AUSENTISMO = "http://127.0.0.1:8001/api/Gestiones-Ausentismo/"
+
+EXTERNAL_API_URL_AUSENTISMO_USERS = "http://127.0.0.1:8001/api/users/"
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'Ausentismo', 'static'),
+]
+
+# Definir BASE_DIR primero
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Configuración de medios
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -48,6 +48,11 @@ def register(request):
             try:
                 rol = Group.objects.get(name=request.data['rol'])
                 Usuario.groups.add(rol)
+                if rol.name == "Admin":
+                    Usuario.is_staff=True
+                    Usuario.is_superuser=True
+                else:
+                    Usuario.is_staff=False
             except Group.DoesNotExist:
                 return Response({"error": "El grupo especificado no existe"}, status=status.HTTP_400_BAD_REQUEST)
             Usuario.save()

@@ -9,24 +9,26 @@ from Ausentismo.api.APIs import get_data_api, get_data_api_all
 class HistorialData(APIView):
     # endpoint historial
     def get(self, request, cedula):
-        # datos del trabajador
+        # datos del trabajador        
         datos = get_data_api(cedula)
+        if not datos:
+            return JsonResponse({"message":"La cedula digitada no existe"},status=500)
         nombre = datos.get('Nombre')
         campana = datos.get('Campaña')
         cargo = datos.get('Cargo')
         
         permisos_data = Permisos.objects.filter(cedula=cedula).values(
-            'codigo_permiso', 'fecha_peticion', 'tipo_permiso', 'parentesco'
-        )
+            'estado', 'codigo_permiso', 'fecha_inicio', 'tipo_permiso', 'parentesco'
+        ).order_by('-fecha_inicio')
         tiqueteras_data = Tiquetera.objects.filter(cedula=cedula).values(
-            'codigo_tiquetera', 'fecha_peticion', 'tipo'
-        )
+            'estado', 'codigo_tiquetera', 'fecha_peticion', 'tipo'
+        ).order_by('-fecha_peticion')
         vacaciones_data = Vacaciones.objects.filter(cedula=cedula).values(
-            'Codigo_vacacione', 'fecha_peticion', 'periodo', 'dias_vacaciones'
-        )
+            'estado', 'Codigo_vacaciones', 'fecha_inicio', 'periodo', 'dias_vacaciones'
+        ).order_by('-fecha_inicio')
         incapacidades_data = Incapacidades.objects.filter(cedula=cedula).values(
-            'radicado', 'fecha_peticion', 'doc_incapacidad', 'sede'
-        )
+            'estado', 'radicado', 'fecha_inicio_incapacidad', 'doc_incapacidad', 'sede'
+        ).order_by('-fecha_inicio_incapacidad')
 
         # contadores
         cont_permisos = permisos_data.count()
@@ -69,7 +71,6 @@ class HistorialData(APIView):
 # Historial each user
 class HistorialMes(APIView):
     def get(self, request):
-        
         data_historial = get_data_api_all(self)
         return Response(data_historial, status = 200)
 

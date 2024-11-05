@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            max-width: 600px;
+            background-color: #fff;
+            margin: 20px auto;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header img {
+            width: 15%;
+            height: auto;
+        }
+        #logo-andes {
+            width: 15%;
+            height: auto;
+            margin: 15px 0;
+        }
+        .content {
+            padding: 20px;
+            text-align: left;
+        }
+        .footer {
+            padding: 10px;
+            text-align: left;
+            font-size: 10px;
+            color: #777;
+        }
+        #texto-arbol, #texto-footer {
+            text-align: right;
+            font-size: 10px;
+            color: #777;
+            margin: 0;
+        }    
+        .social-icons {
+            margin: 15px 0;
+        }
+        .social-icons img{
+            width: 0.5px;
+            height: 0.5px;
+            margin: 0.5px;
+            align-items: left;
+        }
+        .environmental-notice {
+            margin-top: 20px;
+            font-style: italic;
+            color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        .flex-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .text-container, #arbol {
+            margin-left: 120px;
+        }
+        #arbol{ 
+            width: 30px;
+            height: 30px;
+            margin: 0 5px;
+            align-items: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+        </div>
+        <div class="content">
+            <p><strong>Hola {{solicitud.nombre}}</strong></p>
+            <p>Su solicitud de {{solicitud.tipo_gestion}} con codigo {{solicitud.codigo_permiso}} ha sido enviada y sera respondida prontamente.</p>
+            <p><strong>No responder</strong></p>
+        </div>
+        <div class="footer">
+            <img src="cid:logo_andes" alt="Imagen de correo" id="logo-andes">
+            <div class="social-icons">
+                <div class="flex-container">
+                    <div>
+                        <img src="cid:facebook" alt="Facebook">
+                        <img src="cid:twitter" alt="Twitter">
+                        <img src="cid:instagram" alt="Instagram">
+                        <img src="cid:linkedin" alt="LinkedIn">
+                        <img src="cid:youtube" alt="YouTube">
+                    </div>
+                    <div class="text-container">
+                        <p id="texto-footer">AndesBPO - Contacto</p>
+                        <p id="texto-footer">Correo: contacto@andesbpo.com | Tel: (+57) 4 553 78 66</p>
+                        <p id="texto-footer">Dirección: Kilómetro 2 vía, El Tambo, La Ceja, Antioquia</p>
+                    </div>
+                </div>
+            </div>
+            <div class="environmental-notice">
+                <div class="flex-container">
+                    <img src="cid:arbol" alt="arbol" id="arbol">
+                    <div class="text-container">
+                        <p id="texto-arbol">Antes de imprimir este texto, piensa si es necesario hacerlo.</p>
+                        <p id="texto-arbol">En Andes BPO, estamos comprometidos con el cuidado del Medio Ambiente.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+

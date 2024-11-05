@@ -18,9 +18,9 @@ class DataGrafricas(APIView):
 
         # consultas query a los modelos
         permisos_data = Permisos.objects.values('id', 'codigo_permiso', 'fecha_inicio', 'fecha_incorporacion')
-        incapacidades_data = Incapacidades.objects.values('id', 'radicado', 'fecha_inicio', 'fecha_incorporacion')
+        incapacidades_data = Incapacidades.objects.values('id', 'radicado', 'fecha_inicio_incapacidad', 'fecha_incorporacion')
         tiqueteras_data = Tiquetera.objects.values('id', 'codigo_tiquetera', 'fecha_peticion', 'tipo')
-        vacaciones_data = Vacaciones.objects.values('id', 'Codigo_vacacione', 'dias_vacaciones', 'fecha_inicio','fecha_incorporacion')
+        vacaciones_data = Vacaciones.objects.values('id', 'Codigo_vacaciones', 'dias_vacaciones', 'fecha_inicio','fecha_incorporacion')
         
         # contadores dias
         contador_dias_permisos = {day: 0 for day in days}
@@ -49,7 +49,7 @@ class DataGrafricas(APIView):
         for incapacidad in incapacidades_data:
             # data para las graficas
             in_radicado = incapacidad.get('radicado')
-            incapacidad_day_i = incapacidad.get('fecha_inicio')
+            incapacidad_day_i = incapacidad.get('fecha_inicio_incapacidad')
 
             # contador meses
             mes = incapacidad_day_i.month
